@@ -11,9 +11,12 @@
   "license": "ISC",
   "devDependencies": {
     "@types/p5": "^1.4.3",
-    "parcel": "^2.7.0"
+    "buffer": "^6.0.3",
+    "parcel": "^2.7.0",
+    "process": "^0.11.10"
   },
   "dependencies": {
-    "p5": "^1.4.2"
+    "p5": "^1.4.2",
+    "p5.capture": "^1.3.0"
   }
 }

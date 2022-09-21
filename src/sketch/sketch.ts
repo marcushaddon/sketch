@@ -1,11 +1,18 @@
 import P5 from "p5";
 import { range } from "../lib";
 
+export interface IDraw {
+  draw(): void;
+}
+
+export interface Sketch {
+  objects: IDraw[];
+  tick(time: number): void;
+}
+
 type TimeFunc = (p5: P5, time: number) => void;
 
-export interface IDraw {
-  draw(time: number);
-}
+
 
 const sin = (
   len: number,
@@ -35,56 +42,41 @@ const rect = (center: Coord, area: number): { x: number, y: number, w: number, h
   }
 }
 
-const leaf = (x: number, y: number, size: number): IDraw => {
-  // TODO: choose 3 x,y coords such that area is size
-  let { x: rX, y: rY, w, h} = rect([x, y], size);
+class Leaf {
+  public x: number;
+  public y: number;
+  public w: number;
+  public h: number;
 
-  const l = window.p5.random(0.1, 2);
-  const a = window.p5.random(5, size + 5);
+  constructor(
+    x: number,
+    y: number,
+    size: number
+  ) {
+    let { x: rX, y: rY, w, h} = rect([x, y], size);
+    this.x = rX;
+    this.y = rY;
+    this.w = w;
+    this.h = h;
+  }
 
-  const signal = sin(l, 0, a);
-
-  return {
-    draw(time: number) {
-      const delta = signal(time);
-      rX += delta;
-      rY += delta;
-      // w += delta;
-      // h += delta;
-      window.p5.rect(rX, rY, w, h);
-    }
-  };
+  draw() {
+    window.p5.rect(this.x, this.y, this.w, this.h);
+  }
 }
 
-const sketch = (p5: P5) => {
-  return range(2)
-    .map(idx => {
-      const layer = idx + 1;
-      const count = Math.floor(1000 / layer);
-      
-      return range(count)
-        .map(_ => {
-          const x = p5.random(1000);
-          const y = p5.random(1000);
+const sketch = (p5: P5): Sketch => {
+  const leaf = new Leaf(500, 500, 2000);
+  const signal = sin(5, 0, 5);
+  const wiggle = (time: number) => {
+    const d = signal(time);
+    leaf.x += d;
+  }
 
-          const baseSize = 100 * layer * layer;
-          const size = p5.random(baseSize, baseSize * 5);
-          console.log({
-            layer,
-            count,
-            baseSize
-          });
-
-          return leaf(x, y, size);
-        });
-    }).flatMap(o => o);
-  // return range(500).map(_ => {
-  //   const x = p5.random(1000);
-  //   const y = p5.random(1000);
-  //   const size = p5.random(10000);
-
-  //   return leaf(x, y, size);
-  // })
+  return {
+    objects: [leaf],
+    tick: wiggle,
+  }
 }
 
 export default sketch;
