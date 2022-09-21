@@ -3,6 +3,7 @@ import sketch, { IDraw } from "./sketch";
 
 
 let start = new Date().getTime();
+const ms = 1 / 1000;
 
 const run = (p5: P5) => {
 
@@ -18,8 +19,8 @@ const run = (p5: P5) => {
 
   p5.draw = () => {
     p5.clear(255, 255, 255, 1);
-    
-    objs.forEach(o => o.draw(new Date().getTime() - start));
+    const d = (new Date().getTime() - start) * ms;
+    objs.forEach(o => o.draw(d));
   };
   // p5.draw = () => {
   //   p5.ellipse(x * 10, y, 50);

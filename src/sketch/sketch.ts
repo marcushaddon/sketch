@@ -7,6 +7,13 @@ export interface IDraw {
   draw(time: number);
 }
 
+const sin = (
+  len: number,
+  phase: number = 0,
+  amp: number = 1,
+  bias = 0
+) => (time: number) => Math.sin(time * len + phase) * amp + bias;
+
 type Coord = [number, number];
 
 /**
@@ -30,23 +37,54 @@ const rect = (center: Coord, area: number): { x: number, y: number, w: number, h
 
 const leaf = (x: number, y: number, size: number): IDraw => {
   // TODO: choose 3 x,y coords such that area is size
-  const { x: rX, y: rY, w, h} = rect([x, y], size);
+  let { x: rX, y: rY, w, h} = rect([x, y], size);
+
+  const l = window.p5.random(0.1, 2);
+  const a = window.p5.random(5, size + 5);
+
+  const signal = sin(l, 0, a);
 
   return {
-    draw( _: number) {
+    draw(time: number) {
+      const delta = signal(time);
+      rX += delta;
+      rY += delta;
+      // w += delta;
+      // h += delta;
       window.p5.rect(rX, rY, w, h);
     }
   };
 }
 
 const sketch = (p5: P5) => {
-  return range(500).map(_ => {
-    const x = p5.random(1000);
-    const y = p5.random(1000);
-    const size = p5.random(10000);
+  return range(2)
+    .map(idx => {
+      const layer = idx + 1;
+      const count = Math.floor(1000 / layer);
+      
+      return range(count)
+        .map(_ => {
+          const x = p5.random(1000);
+          const y = p5.random(1000);
 
-    return leaf(x, y, size);
-  })
+          const baseSize = 100 * layer * layer;
+          const size = p5.random(baseSize, baseSize * 5);
+          console.log({
+            layer,
+            count,
+            baseSize
+          });
+
+          return leaf(x, y, size);
+        });
+    }).flatMap(o => o);
+  // return range(500).map(_ => {
+  //   const x = p5.random(1000);
+  //   const y = p5.random(1000);
+  //   const size = p5.random(10000);
+
+  //   return leaf(x, y, size);
+  // })
 }
 
 export default sketch;
