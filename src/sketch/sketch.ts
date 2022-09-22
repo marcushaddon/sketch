@@ -1,27 +1,9 @@
 import P5 from "p5";
+import { Sketch, IDraw, Coord } from "./model";
 import { range } from "../lib";
-
-export interface IDraw {
-  draw(): void;
-}
-
-export interface Sketch {
-  objects: IDraw[];
-  tick(time: number): void;
-}
-
-type TimeFunc = (p5: P5, time: number) => void;
+import { rotate, sin } from "../lib/math";
 
 
-
-const sin = (
-  len: number,
-  phase: number = 0,
-  amp: number = 1,
-  bias = 0
-) => (time: number) => Math.sin(time * len + phase) * amp + bias;
-
-type Coord = [number, number];
 
 /**
  * square returns p5.rect params for a square with its
@@ -66,16 +48,40 @@ class Leaf {
 }
 
 const sketch = (p5: P5): Sketch => {
-  const leaf = new Leaf(500, 500, 2000);
-  const signal = sin(5, 0, 5);
-  const wiggle = (time: number) => {
-    const d = signal(time);
-    leaf.x += d;
-  }
+  /**
+   * excercise:
+   * generate spread of random coords
+   * for each, generate a leaf at that coord
+   * then generate list of wave funcs,
+   * each composed of a large gentle sway, and a short wiggle, 
+   * rotated according to distance from lower left
+   * 
+   * later we will modulate freq/amp this way too, as well as distrubute it unevenly/in groups
+   */
+
+  const coords = range(20)
+    .map(x => range(20)
+      .map(y => [x * 50, y * 50]))
+      .flatMap(c => c) as Coord[];
+  
+  const leaves = coords.map(([x, y]) => new Leaf(x, y, window.p5.random(100, 10000)));
+  const scrambled = leaves.sort((_a, _b) => window.p5.random(1) > 0.5 ? -1 : 1);
+
+  const sway = sin(1, 0, 1, 0);
+  const actions = scrambled
+    .map(leaf => {
+      const rotated = rotate(leaf.x / 500, sway);
+      return (time: number) => {
+        const signal = rotated(time);
+        leaf.x += signal;
+      };
+    });
+
+  const tick = (time: number) => actions.forEach(a => a(time));
 
   return {
-    objects: [leaf],
-    tick: wiggle,
+    objects: scrambled,
+    tick,
   }
 }
 

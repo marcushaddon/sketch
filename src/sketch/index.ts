@@ -1,5 +1,6 @@
 import P5 from "p5";
-import build, { IDraw, Sketch } from "./sketch";
+import build from "./sketch";
+import { Sketch } from "./model";
 
 
 let start = new Date().getTime();
