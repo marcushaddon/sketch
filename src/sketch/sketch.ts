@@ -25,8 +25,7 @@ const rect = (center: Coord, area: number): { x: number, y: number, w: number, h
 }
 
 class Leaf {
-  public x: number;
-  public y: number;
+  private position: P5.Vector;
   public w: number;
   public h: number;
 
@@ -36,14 +35,14 @@ class Leaf {
     size: number
   ) {
     let { x: rX, y: rY, w, h} = rect([x, y], size);
-    this.x = rX;
-    this.y = rY;
+    this.position = window.p5.createVector(rX, rY);
+
     this.w = w;
     this.h = h;
   }
 
   draw() {
-    window.p5.rect(this.x, this.y, this.w, this.h);
+    window.p5.rect(this.position.x, this.position.y, this.w, this.h);
   }
 }
 
