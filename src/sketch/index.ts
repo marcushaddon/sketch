@@ -1,12 +1,13 @@
 import P5 from "p5";
 import build from "./sketch";
 import { Sketch } from "./model";
+import { debug } from "../lib/debug";
 
 
 let start = new Date().getTime();
 const ms = 1 / 1000;
 
-const run = (p5: P5) => {
+const runSketch = (p5: P5) => {
 
   let sketch: Sketch;
 
@@ -21,13 +22,25 @@ const run = (p5: P5) => {
   p5.draw = () => {
     p5.clear(255, 255, 255, 1);
     const d = (new Date().getTime() - start) * ms;
-    sketch.tick(d);
-    sketch.objects.forEach(o => o.draw());
+    // sketch.tick(d);
+    // sketch.objects.forEach(o => { o.draw() });
+
+
   };
-  // p5.draw = () => {
-  //   p5.ellipse(x * 10, y, 50);
-  //   x += Math.sin(++x);
-  // }
 }
 
-new P5(run);
+const runDebug = (p5: P5) => {
+  p5.setup = () => {
+    p5.createCanvas(1000, 500);
+  }
+
+  const obj = debug(p5);
+
+  p5.draw = () => {
+    obj.draw();
+  }
+  
+}
+
+new P5(runSketch, document.getElementById("sketch")!);
+new P5(runDebug, document.getElementById("debug")!);

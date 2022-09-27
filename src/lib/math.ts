@@ -1,4 +1,4 @@
-import { curry } from "ramda";
+import { curry, pipe } from "ramda";
 
 /**
  * WAVE FUNC + TOOLS
@@ -26,6 +26,17 @@ const _floor = (floor: number, s: Signal) =>
   (time: number) => Math.max(floor, s(time));
 export const floor = curry(_floor);
 
+const _gate = (threshold: number, s: Signal) =>
+  (time: number) => {
+    const sig = s(time);
+    return sig > threshold ? sig : 0;
+  };
+export const gate = curry(_gate);
+
+const _onOff = (threshold: number, s: Signal) =>
+  (time: number) => s(time) > threshold ? 1 : 0;
+export const onOff = curry(_onOff);
+
 const _rotate = (rot: number, s: Signal) =>
   (time: number) => s(time + rot);
 export const rotate = curry(_rotate);
@@ -34,6 +45,3 @@ const _gain = (g: number, s: Signal) =>
   (time: number) => s(time) * g;
 export const gain = curry(_gain);
 
-/**
- * VECTOR TOOLS
- */
