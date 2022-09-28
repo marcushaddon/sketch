@@ -20,6 +20,10 @@ import { Coord } from "../model";
   }
 }
 
+/**
+ * This will probably be the basis for a general Object class
+ * (for managin scale, rotation, translation, parent child relationshipts...)
+ */
 export class Leaf {
   private basePosition: P5.Vector;
   public position: P5.Vector;
@@ -51,7 +55,8 @@ export class Leaf {
 
     return this;
   }
-
+  
+  // BIG TODO: this is canceling out translation
   scale(s: number) {
     this.w = this.origW * s;
     this.h  = this.origH * s;

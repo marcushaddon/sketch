@@ -3,7 +3,7 @@ import { pipe, __ } from "ramda";
 import { Leaf } from "./entities";
 import { Sketch, Coord } from "./model";
 import { range } from "../lib";
-import { rotate, sin, gain, onOff } from "../lib/math";
+import { rotate, sin, gain, onOff, floor } from "../lib/math";
 
 const sketch = (p5: P5): Sketch => {
   /**
@@ -28,7 +28,11 @@ const sketch = (p5: P5): Sketch => {
   const swaySignal = sin(1, 0, 1, 0);
   const swayDir = window.p5.createVector(-1, 0).normalize();
 
-  const breeze = sin(0.5, 0, 0.5, 1);
+  const breeze = floor(
+    0,
+    sin(0.1, 0, 1, 0)
+  )
+  window.debug(swaySignal);
 
   const shiver = sin(__, 0, 0.1, 0.1);
 
@@ -43,16 +47,17 @@ const sketch = (p5: P5): Sketch => {
         leaf.translate(dir.copy().mult(swaySignal));
 
         // The breeze moves through the branches
-        const rotatedBreeze = rotate(leaf.position.x, breeze);
+        const rotatedBreeze = rotate(leaf.position.x * 0.001, breeze);
         const breezeLevel = rotatedBreeze(time);
   
         // The breeze causes the leaves to shiver (modulates its frequency)
         const shiverSignal = shiver(breezeLevel);
-        const shiverLevel = shiverSignal(time);
+        const rotatedShiver = rotate(window.p5.random(), shiverSignal)
+        const shiverLevel = rotatedShiver(time);
 
 
         // const shiverSignal = rotatedshiver(time);
-        leaf.scale(1 - shiverLevel);
+        // leaf.scale(1 - shiverLevel);
       };
     });
 
