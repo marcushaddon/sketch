@@ -1,4 +1,4 @@
-import { curry, pipe } from "ramda";
+import { curry, path, pipe } from "ramda";
 
 /**
  * WAVE FUNC + TOOLS
@@ -13,6 +13,45 @@ export const _sin = (
   time: number
 ) => Math.sin(time * freq * Math.PI - phase) * amp + bias;
 export const sin = curry(_sin);
+
+export type LazyNum = number | ((time: number) => number);
+
+export type SinOpts = {
+  freq?: LazyNum;
+  phase?: LazyNum;
+  amp?: LazyNum;
+  bias?: LazyNum;
+};
+
+const ensureLazy = (v: LazyNum): ((_: number) => number) =>
+  typeof v === "function" ? v : (_: number = 0) => v;
+
+/**
+ * LazySin creates a sin wave that accepts functions
+ * as parameters that are lazily evaluated. Allows for
+ * a wave whos parameters are modulated by another wave.
+ * Should only be used when actually passing funcs as args,
+ * otherwise use `sin` for performance.
+ */
+export const lazySin = ({
+  freq = 1,
+  phase = 0, // TODO: Make this proportional to freq
+  amp = 1,
+  bias = 0
+}: SinOpts): Signal => {
+  const _freq = ensureLazy(freq);
+  const _phase = ensureLazy(phase);
+  const _amp = ensureLazy(amp);
+  const _bias = ensureLazy(bias);
+
+  // To ensure that phase of 0.5 rotates wave by 0.5 of *initial* wavelength
+  const phaseCorrection = 1 / _freq(0);
+
+  return (time: number) =>
+    Math.sin(
+      time * _freq(time) * Math.PI - _phase(time) * phaseCorrection
+    ) * _amp(time) + _bias(time);
+}
 
 const _add = (a: Signal, b: Signal): Signal =>
   (time: number) => a(time) + b(time);

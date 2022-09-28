@@ -3,7 +3,7 @@ import { pipe, __ } from "ramda";
 import { Leaf } from "./entities";
 import { Sketch, Coord } from "./model";
 import { range } from "../lib";
-import { rotate, sin, gain, onOff, floor } from "../lib/math";
+import { rotate, sin, gain, onOff, floor, lazySin } from "../lib/math";
 
 const sketch = (p5: P5): Sketch => {
   /**
@@ -34,7 +34,9 @@ const sketch = (p5: P5): Sketch => {
   )
   window.debug(swaySignal);
 
-  const shiver = sin(__, 0, 0.1, 0.1);
+  const shiver = lazySin({
+    freq: breeze,
+  })
 
   const actions = scrambled
     .map(leaf => {
@@ -51,8 +53,7 @@ const sketch = (p5: P5): Sketch => {
         const breezeLevel = rotatedBreeze(time);
   
         // The breeze causes the leaves to shiver (modulates its frequency)
-        const shiverSignal = shiver(breezeLevel);
-        const rotatedShiver = rotate(window.p5.random(), shiverSignal)
+        const rotatedShiver = rotate(window.p5.random(), shiver)
         const shiverLevel = rotatedShiver(time);
 
 
