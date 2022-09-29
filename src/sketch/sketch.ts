@@ -3,7 +3,7 @@ import { pipe, __ } from "ramda";
 import { Leaf } from "./entities";
 import { Sketch, Coord } from "./model";
 import { range } from "../lib";
-import { rotate, sin, gain, onOff, floor, lazySin } from "../lib/math";
+import { rotate, sin, gain, onOff, floor, lazySin, add } from "../lib/math";
 
 const sketch = (p5: P5): Sketch => {
   /**
@@ -17,10 +17,10 @@ const sketch = (p5: P5): Sketch => {
    * later we will modulate freq/amp this way too, as well as distrubute it unevenly/in groups
    */
 
-  const coords = range(20)
-    .map(x => range(20)
-      .map(y => [x * 50, y * 50]))
-      .flatMap(c => c) as Coord[];
+  const coords = range(100)
+      .map(_ => [
+        window.p5.random() * 1000, window.p5.random() * 1000
+      ]);
   
   const leaves = coords.map(([x, y]) => new Leaf(x, y, window.p5.random(100, 10000)));
   const scrambled = leaves.sort((_a, _b) => window.p5.random(1) > 0.5 ? -1 : 1);
@@ -28,15 +28,27 @@ const sketch = (p5: P5): Sketch => {
   const swaySignal = sin(1, 0, 1, 0);
   const swayDir = window.p5.createVector(-1, 0).normalize();
 
-  const breeze = floor(
-    0,
-    sin(0.1, 0, 1, 0)
-  )
-  window.debug(swaySignal);
+  // const breeze = floor(
+  //   0,
+  //   add(
+  //     sin(0.1, 0, 1, 0),
+  //     sin(0.34, 0, 0.4, -0.7)
+  //   )
+  // );
+  const fullBreeze = add(
+      sin(0.1, 0, 0.2, 0),
+      sin(0.2, 0, 0.2, 0.1)
+    );
+  const breeze = floor(0, fullBreeze);
 
-  const shiver = lazySin({
-    freq: breeze,
-  })
+  // window.debug(swaySignal, {
+  //   label: "sway - steady and constant",
+  //   color: window.p5.color(100, 255, 100).toString()
+  // });
+  window.debug(breeze, {
+    label: "breeze - intermittent",
+    color: window.p5.color(100,100,100).toString()
+  });
 
   const actions = scrambled
     .map(leaf => {
@@ -45,20 +57,22 @@ const sketch = (p5: P5): Sketch => {
       const dir = swayDir.copy().rotate(window.p5.random(Math.PI * 2));
 
       return (time: number) => {
-        const swaySignal = rotatedSway(time);
-        leaf.translate(dir.copy().mult(swaySignal));
+        const swayLevel= rotatedSway(time);
+        leaf.translate(dir.copy().mult(swayLevel));
 
         // The breeze moves through the branches
         const rotatedBreeze = rotate(leaf.position.x * 0.001, breeze);
-        const breezeLevel = rotatedBreeze(time);
+
+        const shiver = lazySin({
+          freq: rotatedBreeze,
+        })
   
         // The breeze causes the leaves to shiver (modulates its frequency)
-        const rotatedShiver = rotate(window.p5.random(), shiver)
+        const rotatedShiver = rotate(window.p5.random(), shiver);
+        
         const shiverLevel = rotatedShiver(time);
 
-
-        // const shiverSignal = rotatedshiver(time);
-        // leaf.scale(1 - shiverLevel);
+        leaf.scale(shiverLevel * 0.1 + 1);
       };
     });
 

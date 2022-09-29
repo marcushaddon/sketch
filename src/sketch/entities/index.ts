@@ -25,8 +25,7 @@ import { Coord } from "../model";
  * (for managin scale, rotation, translation, parent child relationshipts...)
  */
 export class Leaf {
-  private basePosition: P5.Vector;
-  public position: P5.Vector;
+  readonly position: P5.Vector;
 
   private origW: number;
   private origH: number;
@@ -40,15 +39,16 @@ export class Leaf {
   ) {
     let { x: rX, y: rY, w, h} = rect([x, y], size);
     this.position = window.p5.createVector(rX, rY);
-    this.basePosition = this.position.copy();
 
     this.origW = w;
     this.origH = h;
     this.w = w;
     this.h = h;
   }
-  
-  // TODO: implement .translate(vec)
+
+  public get offset(): P5.Vector {
+    return window.p5.createVector(this.w * 0.5, this.h * 0.5);
+  }
 
   translate(dir: P5.Vector): Leaf {
     this.position.add(dir.x, dir.y);
@@ -59,17 +59,17 @@ export class Leaf {
   // BIG TODO: this is canceling out translation
   scale(s: number) {
     this.w = this.origW * s;
-    this.h  = this.origH * s;
-    const deltaW = this.origW - this.w;
-    const deltaH = this.origH - this.h;
-
-    this.position.x = this.basePosition.x + deltaW * 0.5;
-    this.position.y = this.basePosition.y + deltaH * 0.5;
+    this.h = this.origH * s;
 
     return this;
   }
 
   draw() {
-    window.p5.rect(this.position.x, this.position.y, this.w, this.h);
+    window.p5.rect(
+      this.position.x - this.offset.x,
+      this.position.y - this.offset.y,
+      this.w,
+      this.h
+    );
   }
 }
