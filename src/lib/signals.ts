@@ -1,4 +1,5 @@
 import { curry, path, pipe } from "ramda";
+import { Coord } from "../sketch/model";
 
 /**
  * WAVE FUNC + TOOLS
@@ -11,7 +12,7 @@ export const _sin = (
   amp: number,
   bias: number,
   time: number
-) => Math.sin(time * freq * Math.PI - phase) * amp + bias;
+) => Math.sin(time * freq * Math.PI * 2 - phase) * amp + bias;
 export const sin = curry(_sin);
 
 export type LazyNum = number | ((time: number) => number);
@@ -49,13 +50,17 @@ export const lazySin = ({
 
   return (time: number) =>
     Math.sin(
-      time * _freq(time) * Math.PI - _phase(time) * phaseCorrection
+      time * _freq(time) * Math.PI * 2 - _phase(time) * phaseCorrection
     ) * _amp(time) + _bias(time);
 }
 
 const _add = (a: Signal, b: Signal): Signal =>
   (time: number) => a(time) + b(time);
 export const add = curry(_add);
+
+const _addConst = (a: number, b: Signal): Signal =>
+  (time: number) => b(time) + a;
+export const addConst = curry(_addConst);
 
 const _limit = (limit: number, s: Signal, ) =>
   (time: number) => Math.min(limit, s(time));
@@ -83,4 +88,92 @@ export const rotate = curry(_rotate);
 const _gain = (g: number, s: Signal) =>
   (time: number) => s(time) * g;
 export const gain = curry(_gain);
+
+export type ADSR = {
+  a?: number;
+  attackGain?: number;
+  d?: number;
+  s?: number;
+  sustainGain?: number;
+  r?: number;
+}
+
+const PEAK_LEVEL = 1.2;
+const SUSTAIN_LEVEL = 1;
+
+const lineContaning = (a: Coord, b: Coord): { m: number, b: number } => {
+  const [x1, y1] = a;
+  const [x2, y2] = b;
+  const m = (y2 - y1) / (x2 - x1);
+  const bias = y1 - m * x1;
+
+  return {
+    m, b: bias,
+  }
+}
+
+export const envelope = ({
+  a = 0.2, d = 0.2, s = 0.2, r = 0.4,
+  attackGain = PEAK_LEVEL, sustainGain = SUSTAIN_LEVEL
+}: ADSR = {}): [(triggerTime: number) => void, Signal] => {
+  const aDur = a * 1;
+  const dDur = d * 1;
+  const sDur = s * 1;
+  const rDur = r * 1;
+  const totalDur = aDur + dDur + sDur + rDur;
+  debugger;
+
+  const start: Coord = [0,0];
+  const peak: Coord = [aDur, attackGain];
+  const sustain: Coord = [aDur + dDur, sustainGain];
+  const decay: Coord = [aDur + dDur + sDur, sustainGain];
+  const finish: Coord = [totalDur, 0];
+
+  const { m: aSlope, b: aBias } = lineContaning(
+    start,
+    peak
+  );
+
+  const { m: dSlope, b: dBias } = lineContaning(
+    peak,
+    sustain
+  );
+
+  const { m: rSlope, b: rBias } = lineContaning(
+    decay,
+    finish
+  );
+
+  let lastTrigger = -Infinity;
+
+  // TODO: retrigger modes
+  const signal = (time: number): number => {
+    const elapsed = (time) - lastTrigger;
+    if (elapsed > totalDur || elapsed < 0) {
+      debugger;
+      return 0;
+    }
+
+    // In attack?
+    if (elapsed < aDur) {
+      return elapsed * aSlope + aBias;
+    }
+    // In decay?
+    if (elapsed < aDur + dDur) {
+      return elapsed * dSlope + dBias;
+    }
+    // In sustain?
+    if (elapsed < aDur + dDur + sDur) {
+      return sustainGain;
+    }
+    // in release!
+    return rSlope * elapsed + rBias;
+  }
+
+  const trigger = (time: number) => {
+    lastTrigger = time;
+  };
+
+  return [trigger, signal];
+}
 

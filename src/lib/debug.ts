@@ -1,6 +1,6 @@
 import { Chart, registerables } from "chart.js";
 import { range } from "ramda";
-import { Signal } from "./math";
+import { Signal } from "./signals";
 
 export type SignalDebug = {
   label: string;
@@ -16,7 +16,7 @@ let initTimeout: ReturnType<typeof setTimeout> | undefined;
 const signals: Signal[] = [];
 const signalInfos: SignalDebug[] = [];
 
-let X_SCALE = 10;
+let X_SCALE = 1;
 
 const init = (c: HTMLCanvasElement): Chart => {
   return new Chart(c, {
@@ -25,7 +25,7 @@ const init = (c: HTMLCanvasElement): Chart => {
     data: {
       datasets: signals.map((s, i) => {
         const info = signalInfos[i];
-        const sampleCount = info.samples || 100 * X_SCALE;
+        const sampleCount = 1000; //info.samples || 100 * X_SCALE;
         const incr = X_SCALE / sampleCount;
         const color = info.color ? info.color : 'rgb(255, 99, 132)'
 

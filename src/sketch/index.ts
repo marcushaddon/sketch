@@ -35,7 +35,6 @@ window.debug = debug;
 new P5(runSketch, document.getElementById("sketch")!);
 
 const scaleX = document.getElementById("debug.scale.x") as HTMLInputElement;
-console.log("adding event listener to", scaleX);
 scaleX.addEventListener("change", event => {
   scale(parseFloat(scaleX.value));
 })
