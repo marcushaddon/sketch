@@ -181,3 +181,16 @@ export const envelope = ({
   return [trigger, signal];
 }
 
+/**
+ * delta is stateful!
+ */
+export const delta = (s: Signal): Signal => {
+  let prev = 0;
+  return (t: number) => {
+    const level = s(t);
+    const d = level - prev;
+    prev = level;
+
+    return d;
+  }
+}

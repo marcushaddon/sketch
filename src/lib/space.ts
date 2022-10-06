@@ -26,15 +26,9 @@ const factorsOfRatio = (n: number, ratio: number): [number, number] => {
  * dimensions `width` x `height`
  */
 export const grid = (width: number, height: number, count: number): Coord[] => {
-  // Find count for w and h
-  // two numbers adding up to count, one that goes into width n times, one that goes into h n times
-  // if w == h, wCount hCount = count // 2
-  // if w == h * 2, wCount = count * 2/3, hCount == count * 1/3
-  // [wRatio, hRatio] = [w / (w + h), h / (w + h)], wCount = wRatio * count, hCount = hRatio * count
   const wRatio = width / (width + height);
   const [wCount, hCount] = factorsOfRatio(count, wRatio);
-  // OH DUH we will end up with wCount X hCount, not wCount + hCount
-  // how do we get numbers of this ratio that multiply to be `count`?
+
   console.assert(wCount + hCount === count);
 
   const wIncr = width / wCount;
@@ -53,3 +47,6 @@ export const grid = (width: number, height: number, count: number): Coord[] => {
     ]) as Coord)).flatMap(c => c);
 
 }
+
+export const mutateCoord = ([x, y]: Coord, amt: number = 1): Coord =>
+  [x + Math.floor(window.p5.random(amt)), y + Math.floor(window.p5.random(amt))]

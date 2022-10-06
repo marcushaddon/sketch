@@ -12,27 +12,40 @@ import {
   add,
   envelope,
   addConst,
-  multConst
+  multConst,
+  delta
 } from "../lib/signals";
 import { grid } from "../lib/space";
 
-const ratios = [
-  [600, 40],
-  [300, 60],
-  [30, 120]
-]
+const ratios: [number, number][] = [
+  [100, 40],
+  [70, 60],
+  [20, 100]
+];
+
+const gentleBreeze = sin(1, 0, 1, 0);
+
 
 const sketch = (p5: P5): Sketch => {
+  const leafA = new Leaf(400, 500, 100);
+  const leafB = new Leaf(600, 500, 100);
 
-  const objs = grid(1000, 1000, 40)
-    .map(([x, y]) => new Leaf(x, y, 20));
-  
-  const actions: ((time: number) => void)[] = []
+  window.debug(gentleBreeze, { label: "breeze" });
+
+  const dir = window.p5.createVector(1, 0);
+  const dBreeze = delta(gentleBreeze);
+  window.debug(dBreeze, { label: "delta breeze" });
+  const anim = (time: number) => {
+    const breezeLevel = dBreeze(time) * 10;
+    leafA.translate(dir.mult(breezeLevel));
+    leafB.translate(dir.mult(breezeLevel));
+  }
+
 
   return {
-    objects: objs,
-    tick: (t: number) => actions.forEach(a => a(t)),
-  }
+    objects: [leafA, leafB],
+    tick: (t: number) => anim(t)
+  };
 }
 
 export default sketch;

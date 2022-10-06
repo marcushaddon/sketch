@@ -49,6 +49,12 @@ const init = (c: HTMLCanvasElement): Chart => {
 
 export const debug = (canvas: HTMLCanvasElement) => {
 
+  // console.log()
+  // return {
+  //   debug: (s: Signal) => null,
+  //   scale: (s: number) => null
+  // }
+
   const maybeInit = (debounce = 0) => {
     clearTimeout(initTimeout);
     initTimeout = setTimeout(() => {
@@ -58,7 +64,6 @@ export const debug = (canvas: HTMLCanvasElement) => {
       chart = init(canvas);
     }, debounce);
   };
-
 
   return {
     // DEBUG
