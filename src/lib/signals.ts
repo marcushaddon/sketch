@@ -62,6 +62,10 @@ const _addConst = (a: number, b: Signal): Signal =>
   (time: number) => b(time) + a;
 export const addConst = curry(_addConst);
 
+const _multConst = (a: number, b: Signal): Signal =>
+  (time: number) => b(time) * a;
+export const multConst = curry(_multConst);
+
 const _limit = (limit: number, s: Signal, ) =>
   (time: number) => Math.min(limit, s(time));
 export const limit = curry(_limit);

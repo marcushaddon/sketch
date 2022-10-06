@@ -5,9 +5,9 @@ import { Coord } from "../model";
  * square returns p5.rect params for a square with its
  * center at center having area area.
  */
- const rect = (center: Coord, area: number): { x: number, y: number, w: number, h: number } => {
-  const w = Math.sqrt(area) * window.p5.random(0.5, 1.5);
-  const h = area / w;
+ const rect = (center: Coord, size: number): { x: number, y: number, w: number, h: number } => {
+  const w = window.p5.random(0.25, 0.75) * size;
+  const h = size - w;
   const hW = w / 2;
   const hH = h / 2;
   const [centerX, centerY] = center;
@@ -32,10 +32,13 @@ export class Leaf {
   private w: number;
   private h: number;
 
+  private color: P5.Color;
+
   constructor(
     x: number,
     y: number,
-    size: number
+    size: number,
+    color = window.p5.color(255, 255, 255)
   ) {
     let { x: rX, y: rY, w, h} = rect([x, y], size);
     this.position = window.p5.createVector(rX, rY);
@@ -44,6 +47,8 @@ export class Leaf {
     this.origH = h;
     this.w = w;
     this.h = h;
+
+    this.color = color;
   }
 
   public get offset(): P5.Vector {
@@ -65,6 +70,7 @@ export class Leaf {
   }
 
   draw() {
+    window.p5.fill(this.color)
     window.p5.rect(
       this.position.x - this.offset.x,
       this.position.y - this.offset.y,
