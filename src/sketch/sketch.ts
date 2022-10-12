@@ -1,5 +1,5 @@
 import P5 from "p5";
-import { pipe, __, range } from "ramda";
+import { pipe, __, range, map, reduce, curry } from "ramda";
 import { Leaf } from "./entities";
 import { Sketch, Coord } from "./model";
 import {
@@ -13,9 +13,15 @@ import {
   envelope,
   addConst,
   multConst,
-  delta
+  Signal,
 } from "../lib/signals";
 import { grid } from "../lib/space";
+
+type Model = {
+  steadyBreeze: Signal;
+  gust: Signal;
+  windDir: P5.Vector;
+}
 
 const ratios: [number, number][] = [
   [100, 40],
@@ -23,29 +29,77 @@ const ratios: [number, number][] = [
   [20, 100]
 ];
 
-const gentleBreeze = sin(1, 0, 1, 0);
+type LayerGroup = {
+  model: Model,
+  layer: Leaf[]
+};
+
+const model: Model = {
+  steadyBreeze: sin(0.25, 0, 1),
+  gust: floor(0, addConst(-4, sin(0.05, 0, 5))),
+  windDir: new P5.Vector(-1, 0)
+};
+
 
 
 const sketch = (p5: P5): Sketch => {
-  const leafA = new Leaf(400, 500, 100);
-  const leafB = new Leaf(600, 500, 100);
+  const createLayer = (idx: number): Leaf[] => {
+    const count = Math.floor(Math.pow(idx * 10, 1.5));
+    const size = 200 / idx;
+    const green = 255 - 180 / idx;
 
-  window.debug(gentleBreeze, { label: "breeze" });
-
-  const dir = window.p5.createVector(1, 0);
-  const dBreeze = delta(gentleBreeze);
-  window.debug(dBreeze, { label: "delta breeze" });
-  const anim = (time: number) => {
-    const breezeLevel = dBreeze(time) * 10;
-    leafA.translate(dir.mult(breezeLevel));
-    leafB.translate(dir.mult(breezeLevel));
+    // const color = new P5.Color();
+    // color.setGreen(green);
+    return grid(1000, 1000, count)
+      .map(([x, y]) => new Leaf(x, y, size));
   }
-
-
-  return {
-    objects: [leafA, leafB],
-    tick: (t: number) => anim(t)
+  
+  // Apply translations based on layer idx
+  const wavesForLayer = curry((model: Model, layer: Leaf[]): LayerGroup => {
+    // BOOKMARK: alter waves
+    return {
+      model: {
+        ...model,
+      },
+      layer,
+    }
+  });
+  
+  const wfLayer = wavesForLayer(model);
+  
+  const wavesForLeaf = curry(({ layer, model }: LayerGroup): Sketch => {
+    // TODO: bind waves to leaf
+    return {
+      objects: layer,
+      tick: (time: number) => null
+    }
+  });
+  
+  const mergeSketches = (a: Sketch, b: Sketch): Sketch => ({
+    objects: [...a.objects, ...b.objects],
+    tick: (time: number) => {
+      a.tick(time);
+      b.tick(time);
+    }
+  });
+  
+  const blankSketch: Sketch = {
+    objects: [],
+    tick: (time: number) => null
   };
+  
+  const LAYER_COUNT = 2;
+  
+  const scene = pipe(
+    range(0),
+    map(createLayer),
+    map(wfLayer),
+    map(wavesForLeaf),
+    reduce((acc, curr) => mergeSketches(acc, curr), blankSketch)
+  );
+
+  
+  return scene(LAYER_COUNT + 1);
 }
 
 export default sketch;

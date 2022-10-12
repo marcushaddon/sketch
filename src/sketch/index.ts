@@ -13,7 +13,10 @@ const runSketch = (p5: P5) => {
 
   p5.setup = () => {
     window.p5 = p5;
+    window.p5.colorMode("rgb");
+    (window as any).P5 = P5;
     p5.createCanvas(1000, 1000);
+    debugger;
     sketch = build(p5);
   };
 

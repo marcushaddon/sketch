@@ -10,9 +10,12 @@ export const _sin = (
   freq: number,
   phase: number,
   amp: number,
-  bias: number,
   time: number
-) => Math.sin(time * freq * Math.PI * 2 - phase) * amp + bias;
+) => {
+  const f = Math.PI * 2 / freq;
+
+  return Math.sin(time * f - phase * Math.PI) * amp;
+}
 export const sin = curry(_sin);
 
 export type LazyNum = number | ((time: number) => number);
@@ -21,7 +24,6 @@ export type SinOpts = {
   freq?: LazyNum;
   phase?: LazyNum;
   amp?: LazyNum;
-  bias?: LazyNum;
 };
 
 const ensureLazy = (v: LazyNum): ((_: number) => number) =>
@@ -38,20 +40,15 @@ export const lazySin = ({
   freq = 1,
   phase = 0, // TODO: Make this proportional to freq
   amp = 1,
-  bias = 0
 }: SinOpts): Signal => {
   const _freq = ensureLazy(freq);
   const _phase = ensureLazy(phase);
   const _amp = ensureLazy(amp);
-  const _bias = ensureLazy(bias);
-
-  // To ensure that phase of 0.5 rotates wave by 0.5 of *initial* wavelength
-  const phaseCorrection = 1 / _freq(0);
 
   return (time: number) =>
     Math.sin(
-      time * _freq(time) * Math.PI * 2 - _phase(time) * phaseCorrection
-    ) * _amp(time) + _bias(time);
+      time * Math.PI * 2 / _freq(time) - _phase(time) * Math.PI
+    ) * _amp(time);
 }
 
 const _add = (a: Signal, b: Signal): Signal =>
@@ -86,7 +83,7 @@ const _onOff = (threshold: number, s: Signal) =>
 export const onOff = curry(_onOff);
 
 const _rotate = (rot: number, s: Signal) =>
-  (time: number) => s(time + rot);
+  (time: number) => s(time + rot * Math.PI);
 export const rotate = curry(_rotate);
 
 const _gain = (g: number, s: Signal) =>
